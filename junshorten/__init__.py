@@ -52,6 +52,51 @@ system.setProperty("jna.tmpdir", application.getResource("tmp/jna").getAbsoluteP
 
 log.debug("Application initialized.")
 
+
+util = autoclass("jd.utils.JDUtilities")
+
+
+print(util)
+print(util.getJDHomeDirectoryFromEnvironment())
+
+# import java.io.File;
+# import java.lang.ClassLoader;
+# import java.net.URL;
+# import java.net.URLClassLoader;
+
+# File file  = new File("./Core.jar");
+# System.out.println("File: " + file);
+
+# URL url = file.toURL();
+# URL[] urls = new URL[]{url};
+
+# ClassLoader cl = new URLClassLoader(urls);
+# Class cls = cl.loadClass("jd.SecondLevelLaunch");
+
+# System.out.println("Loaded class: " + cls);
+
+
+filetype = autoclass("java.io.File")
+fileinstance = filetype(os.path.join(jd_root, 'Core.jar'))
+urlinstance = fileinstance.toURL()
+print(urlinstance)
+
+urlloader = autoclass("java.net.URLClassLoader")
+print(urlloader)
+classloader = urlloader([urlinstance])
+print(classloader)
+sll = classloader.loadClass("jd.SecondLevelLaunch")
+print(sll)
+print(sll.toString())
+print(dir(sll))
+
+sllins = sll.newInstance()
+print("Instance:", sllins)
+
+import sys
+sys.exit()
+
+
 sll_classes = [
 	'jd.SecondLevelLaunch$1',
 	'jd.SecondLevelLaunch$10$1',
