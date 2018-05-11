@@ -63,7 +63,10 @@ class UnshortenIt:
         if module and module in self.modules:
             if self._urlcache and self._urlcache.get(uri, None):
                 return self._urlcache.get(uri)
-            return self.modules[module].unshorten(uri)
+            res = self.modules[module].unshorten(uri)
+            if self._urlcache:
+                self._urlcache[uri] = res
+            return res
 
         if unshorten_nested:
             last_uri = uri
@@ -79,6 +82,8 @@ class UnshortenIt:
                         matched = True
                         if uri == last_uri:
                             break
+                        if self._urlcache:
+                            self._urlcache[last_uri] = uri
                         last_uri = uri
                 if not matched:
                     break
@@ -90,6 +95,8 @@ class UnshortenIt:
                         res = self._urlcache.get(uri)
                     else:
                         res = m.unshorten(uri)
+                    if self._urlcache:
+                        self._urlcache[uri] = res
                     self.log.info("URL '%s' resolved to %s", uri, res)
 
                     return res
