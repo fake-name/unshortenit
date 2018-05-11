@@ -10,3 +10,6 @@ from .__version__ import (          # noqa
 )
 
 from .unshortenit import UnshortenIt    # noqa
+
+from .exceptions import NotFound
+from .exceptions import UnshortenFailed
