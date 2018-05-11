@@ -1,3 +1,4 @@
+import logging
 from typing import List
 import requests
 
@@ -24,6 +25,8 @@ class UnshortenIt:
     def __init__(self, default_timeout: int = 30, default_headers: dict = None):
         self._default_headers = default_headers or DEFAULT_HEADERS
         self._default_timeout = default_timeout
+
+        self.log = logging.getLogger("Main.LinkUnshortener")
 
         self.register_modules([
             AdfLy,
@@ -55,6 +58,7 @@ class UnshortenIt:
                 matched = False
                 for k, m in self.modules.items():
                     if m.is_match(uri):
+                        self.log.info("Unshortener %s wants to process URL: '%s'", k, uri)
                         matched = True
                         uri = m.unshorten(uri)
                         if uri == last_uri:
