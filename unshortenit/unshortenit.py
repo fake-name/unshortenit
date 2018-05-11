@@ -22,9 +22,15 @@ class UnshortenIt:
     _default_headers = None
     _default_timeout = None
 
-    def __init__(self, default_timeout: int = 30, default_headers: dict = None):
+    def __init__(self,
+                default_timeout: int  = 30,
+                default_headers: dict = None,
+                urlcache:        dict = None,
+
+            ):
         self._default_headers = default_headers or DEFAULT_HEADERS
         self._default_timeout = default_timeout
+        self._urlcache        = urlcache
 
         self.log = logging.getLogger("Main.LinkUnshortener")
 
@@ -55,6 +61,8 @@ class UnshortenIt:
         timeout = timeout or self._default_timeout
 
         if module and module in self.modules:
+            if self._urlcache and self._urlcache.get(uri, None):
+                return self._urlcache.get(uri)
             return self.modules[module].unshorten(uri)
 
         if unshorten_nested:
@@ -64,8 +72,11 @@ class UnshortenIt:
                 for k, m in self.modules.items():
                     if m.is_match(uri):
                         self.log.info("Unshortener %s wants to process URL: '%s'", k, uri)
+                        if self._urlcache and self._urlcache.get(uri, None):
+                            uri = self._urlcache.get(uri)
+                        else:
+                            uri = m.unshorten(uri)
                         matched = True
-                        uri = m.unshorten(uri)
                         if uri == last_uri:
                             break
                         last_uri = uri
@@ -75,7 +86,10 @@ class UnshortenIt:
             for k, m in self.modules.items():
                 if m.is_match(uri):
                     self.log.info("Unshortener %s wants to process URL: '%s'", k, uri)
-                    res = m.unshorten(uri)
+                    if self._urlcache and self._urlcache.get(uri, None):
+                        res = self._urlcache.get(uri)
+                    else:
+                        res = m.unshorten(uri)
                     self.log.info("URL '%s' resolved to %s", uri, res)
 
                     return res
