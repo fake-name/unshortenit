@@ -44,13 +44,13 @@ class UnshortenIt:
         for module in modules:
             self.register_module(module)
 
-    def unshorten(self,
+    def __unshorten(self,
                   uri:              str,
                   module:           str  = None,
                   timeout:          int  = None,
                   unshorten_nested: bool = False,
                   resolve_30x:      bool = True,
-            ) -> str:
+              ):
 
         timeout = timeout or self._default_timeout
 
@@ -75,10 +75,32 @@ class UnshortenIt:
             for k, m in self.modules.items():
                 if m.is_match(uri):
                     self.log.info("Unshortener %s wants to process URL: '%s'", k, uri)
-                    return m.unshorten(uri)
+                    res = m.unshorten(uri)
+                    self.log.info("URL '%s' resolved to %s", uri, res)
+
+                    return res
 
         if resolve_30x:
             self.log.info("Unshortener resolving potential 30X redirects for '%s'", uri)
             res = requests.get(uri, timeout=timeout, headers=self._default_headers)
+            if res.url == uri:
+                self.log.info("URI Did not change due to 30X redirects.")
+            else:
+                self.log.info("URL '%s' redirected to %s", uri, res.url)
             return res.url
         return uri
+
+    def unshorten(self,
+                  uri:              str,
+                  module:           str  = None,
+                  timeout:          int  = None,
+                  unshorten_nested: bool = False,
+                  resolve_30x:      bool = True,
+            ) -> str:
+
+        try:
+            return self.__unshorten(uri, module, timeout, unshorten_nested, resolve_30x)
+        except Exception as e:
+            self.log.error("Failure unshortening URL: '%s'", uri)
+            self.log.error("Exception: %s", e)
+            raise e
