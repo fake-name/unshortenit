@@ -78,6 +78,7 @@ class UnshortenIt:
                     return m.unshorten(uri)
 
         if resolve_30x:
+            self.log.info("Unshortener resolving potential 30X redirects for '%s'", uri)
             res = requests.get(uri, timeout=timeout, headers=self._default_headers)
             return res.url
         return uri
