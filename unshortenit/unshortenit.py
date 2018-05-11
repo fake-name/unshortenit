@@ -44,8 +44,13 @@ class UnshortenIt:
         for module in modules:
             self.register_module(module)
 
-    def unshorten(self, uri: str, module: str = None, timeout: int = None,
-                  unshorten_nested: bool = False, force: bool = False) -> str:
+    def unshorten(self,
+                  uri:              str,
+                  module:           str  = None,
+                  timeout:          int  = None,
+                  unshorten_nested: bool = False,
+                  resolve_30x:      bool = True,
+            ) -> str:
 
         timeout = timeout or self._default_timeout
 
@@ -69,7 +74,10 @@ class UnshortenIt:
         else:
             for k, m in self.modules.items():
                 if m.is_match(uri):
+                    self.log.info("Unshortener %s wants to process URL: '%s'", k, uri)
                     return m.unshorten(uri)
 
-        res = requests.get(uri, timeout=timeout, headers=self._default_headers)
-        return res.url
+        if resolve_30x:
+            res = requests.get(uri, timeout=timeout, headers=self._default_headers)
+            return res.url
+        return uri
