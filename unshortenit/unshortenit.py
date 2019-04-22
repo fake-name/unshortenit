@@ -61,11 +61,7 @@ class UnshortenIt:
         timeout = timeout or self._default_timeout
 
         if module and module in self.modules:
-            if self._urlcache and self._urlcache.get(uri, None):
-                return self._urlcache.get(uri)
             res = self.modules[module].unshorten(uri)
-            if self._urlcache:
-                self._urlcache[uri] = res
             return res
 
         if unshorten_nested:
@@ -75,15 +71,11 @@ class UnshortenIt:
                 for k, m in self.modules.items():
                     if m.is_match(uri):
                         self.log.info("Unshortener %s wants to process URL: '%s'", k, uri)
-                        if self._urlcache and self._urlcache.get(uri, None):
-                            uri = self._urlcache.get(uri)
-                        else:
-                            uri = m.unshorten(uri)
+                        uri = m.unshorten(uri)
                         matched = True
                         if uri == last_uri:
                             break
-                        if self._urlcache:
-                            self._urlcache[last_uri] = uri
+
                         last_uri = uri
                 if not matched:
                     break
@@ -91,12 +83,7 @@ class UnshortenIt:
             for k, m in self.modules.items():
                 if m.is_match(uri):
                     self.log.info("Unshortener %s wants to process URL: '%s'", k, uri)
-                    if self._urlcache and self._urlcache.get(uri, None):
-                        res = self._urlcache.get(uri)
-                    else:
-                        res = m.unshorten(uri)
-                    if self._urlcache:
-                        self._urlcache[uri] = res
+                    res = m.unshorten(uri)
                     self.log.info("URL '%s' resolved to %s", uri, res)
 
                     return res
@@ -117,10 +104,22 @@ class UnshortenIt:
                   timeout:          int  = None,
                   unshorten_nested: bool = False,
                   resolve_30x:      bool = True,
+                  use_cache:        bool = True,
             ) -> str:
 
         try:
-            return self.__unshorten(uri, module, timeout, unshorten_nested, resolve_30x)
+
+            if use_cache and self._urlcache and self._urlcache.get(uri, None):
+                have = self._urlcache.get(uri)
+                if have:
+                    return have
+
+            res = self.__unshorten(uri, module, timeout, unshorten_nested, resolve_30x)
+            if self._urlcache and res != uri:
+                self._urlcache[uri] = res
+
+            return res
+
         except Exception as e:
             self.log.error("Failure unshortening URL: '%s'", uri)
             self.log.error("Exception: %s", e)
