@@ -108,16 +108,16 @@ class UnshortenIt:
             if use_cache and self._urlcache and self._urlcache.get(uri, None):
                 res = self._urlcache.get(uri)
             else:
-                res = requests.get(uri, timeout=timeout, headers=self._default_headers)
-            if res.url == uri:
+                res = requests.get(uri, timeout=timeout, headers=self._default_headers).url
+            if res == uri:
                 self.log.info("URI Did not change due to 30X redirects.")
             else:
-                self.log.info("URL '%s' redirected to %s", uri, res.url)
+                self.log.info("URL '%s' redirected to %s", uri, res)
 
             if self._urlcache:
-                self._urlcache[last_uri] = res.url
+                self._urlcache[uri] = res
 
-            return res.url
+            return res
         return uri
 
     def unshorten(self,
